@@ -1,0 +1,81 @@
+1. Sales Performance by Brands
+SELECT
+    b.brand_name,
+    COUNT(oi.item_id) AS total_items_sold,
+    SUM(oi.quantity) AS total_quantity,
+    ROUND(SUM(oi.quantity * oi.list_price), 2) AS total_revenue
+FROM a.brands b
+JOIN a.products p ON b.brand_id = p.brand_id
+JOIN a.order_items oi ON p.product_id = oi.product_id
+GROUP BY b.brand_name
+ORDER BY total_revenue DESC;
+
+2. Top Customer Identification
+SELECT
+    c.first_name,
+    c.last_name,
+    c.city,
+    c.state,
+    COUNT(o.order_id) AS total_orders,
+    ROUND(SUM(oi.quantity * oi.list_price), 2) AS total_spent
+FROM a.customers c
+JOIN a.orders o ON c.customer_id = o.customer_id
+JOIN a.order_items oi ON o.order_id = oi.order_id
+GROUP BY c.customer_id, c.first_name, c.last_name, c.city, c.state
+ORDER BY total_spent DESC
+LIMIT 10;
+
+3. Best Selling Product by Category
+SELECT
+    c.category_name,
+    p.product_name,
+    b.brand_name,
+    SUM(oi.quantity) AS units_sold,
+    ROUND(SUM(oi.quantity * oi.list_price), 2) AS revenue
+FROM a.categories c
+JOIN a.products p ON c.category_id = p.category_id
+JOIN a.brands b ON p.brand_id = b.brand_id
+JOIN a.order_items oi ON p.product_id = oi.product_id
+GROUP BY c.category_name, p.product_name, b.brand_name
+ORDER BY c.category_name, units_sold DESC;
+
+4. Low Stock Alert
+SELECT
+    p.product_name,
+    b.brand_name,
+    st.store_name,
+    sk.quantity AS current_stock
+FROM a.products p
+JOIN a.brands b ON p.brand_id = b.brand_id
+JOIN a.stocks sk ON p.product_id = sk.product_id
+JOIN a.stores st ON sk.store_id = st.store_id
+WHERE sk.quantity < 10
+ORDER BY sk.quantity ASC;
+
+5. Geographic Customer Analysis
+SELECT
+    c.city,
+    c.state,
+    COUNT(DISTINCT c.customer_id) AS total_customers,
+    COUNT(o.order_id) AS total_orders,
+    ROUND(SUM(oi.quantity * oi.list_price), 2) AS total_revenue
+FROM a.customers c
+LEFT JOIN a.orders o ON c.customer_id = o.customer_id
+LEFT JOIN a.order_items oi ON o.order_id = oi.order_id
+GROUP BY c.city, c.state
+HAVING total_customers > 1
+ORDER BY total_revenue DESC;
+
+6. Store Performance Comparison
+SELECT
+    st.store_name,
+    st.city,
+    st.state,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    SUM(oi.quantity) AS total_items_sold,
+    ROUND(SUM(oi.quantity * oi.list_price), 2) AS total_revenue
+FROM a.stores st
+JOIN a.orders o ON st.store_id = o.store_id
+JOIN a.order_items oi ON o.order_id = oi.order_id
+GROUP BY st.store_name, st.city, st.state
+ORDER BY total_revenue DESC;
